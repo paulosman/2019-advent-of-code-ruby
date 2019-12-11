@@ -33,20 +33,22 @@ end
 
 def record_moves(wire)
   locations = [Coordinate.new(0, 0)]
-  path = Hash.new(false)
-
+  path = Hash.new(0)
+  steps = 1
   wire.each do |step|
     1.upto(amount(step)) do
       locations << move_function(direction(step)).call(locations.last)
-      path[locations.last] = true
+      path[locations.last] = steps
+      steps += 1
     end
   end
-
   path
 end
 
 def find_intersections(moves_one, moves_two)
-  moves_one.select { |key, _| moves_two.key? key }.map { |i| i[0] }
+  moves_one.map do |coord, steps|
+    [coord, steps + moves_two[coord]] if moves_two.key? coord
+  end.reject(&:nil?)
 end
 
 wires = wire_paths('input/day03.txt')
@@ -56,7 +58,15 @@ moves_two = record_moves(wires[1])
 intersections = find_intersections(moves_one, moves_two)
 
 distances = intersections.map do |intersection|
-  distance(intersection, Coordinate.new(0, 0))
+  distance(intersection[0], Coordinate.new(0, 0))
 end
 
-p distances.min
+p("Intersections: #{intersections}")
+p("Distance of intersection closest to 0, 0: #{distances.min}")
+
+steps = intersections.map do |intersection|
+  intersection[1]
+end
+
+p("Steps for each intersection: #{steps}")
+p(steps.min)
