@@ -3,12 +3,21 @@ ending = 675_869
 
 def adjacent_chars?(password)
   prev = nil
+  streaks = []
+  streak = 1
   password.to_s.split('').each do |c|
-    return true if c == prev
+    if c == prev
+      streak += 1
+    elsif streak > 1
+      streaks << streak
+      streak = 1
+    end
 
     prev = c
   end
-  false
+
+  streaks << streak
+  streaks.include? 2
 end
 
 def increasing?(password)
