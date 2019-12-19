@@ -12,13 +12,13 @@ noun_value.upto(99).each do |n|
     computer = Computer.new(input)
 
     input.each_slice(4).each do |slice|
-      result = computer.process(slice)
+      result = computer.process_instruction(slice)
 
       break unless result
 
-      if computer.original[0] == 19_690_720
-        p(computer.original[1])
-        p(computer.original[2])
+      if computer.program[0] == 19_690_720
+        p(computer.program[1])
+        p(computer.program[2])
       end
     end
   end
