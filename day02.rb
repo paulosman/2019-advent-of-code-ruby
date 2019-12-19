@@ -1,27 +1,4 @@
-# Process the opcode instruction. The first integer in the instruction is the
-# opcode. An opcode of 1 means we're adding, 2 means we're multiplying, and 99
-# means that the program is finished and should immediately halt. For addition
-# and multiplication instructions, the second and third integers are the
-# positions of the operands in the original input array. The fourth integer in
-# the instruction is the position in the input array that should be overwritten
-# with the result of the instruction.
-#
-# Note that this version returns false when the instruction is a halt operation,
-# and modifies original when the instruction contains an addition or
-# multiplication opcode.
-def process_opcode(opcode, original)
-  operation = opcode[0]
-  return false if operation == 99
-
-  symbol = operation == 1 ? :+ : :*
-
-  positions = [original[opcode[1]], original[opcode[2]]]
-  replace = opcode[3]
-
-  original[replace] = positions[0].send(symbol, positions[1])
-
-  true
-end
+require_relative './intcode_computer.rb'
 
 # We use a brute force approach to find the pair of inputs that produce the
 # output 19690720.
@@ -32,14 +9,16 @@ noun_value.upto(99).each do |n|
     input = File.new('input/day02.txt').read.split(',').map(&:to_i)
     input[1] = n
     input[2] = v
+    computer = Computer.new(input)
 
     input.each_slice(4).each do |slice|
-      result = process_opcode(slice, input)
+      result = computer.process(slice)
+
       break unless result
 
-      if input[0] == 19_690_720
-        p(input[1])
-        p(input[2])
+      if computer.original[0] == 19_690_720
+        p(computer.original[1])
+        p(computer.original[2])
       end
     end
   end
