@@ -25,6 +25,10 @@ class Computer
       2 => :*,
       3 => :input,
       4 => :output,
+      5 => :jump_if_true,
+      6 => :jump_if_false,
+      7 => :less_than,
+      8 => :equals,
       99 => :halt
     }[number % 100]
   end
@@ -37,7 +41,7 @@ class Computer
     }
   end
 
-  def value_for_mode(mode, program, value)
+  def value_for_mode(mode, value)
     if mode == 0 # position
       program[value]
     else
@@ -56,27 +60,88 @@ class Computer
     program
   end
 
+  def input(pointer)
+    puts "INPUT: "
+    input = gets.chomp.to_i
+    dest = program[pointer + 1]
+    program[dest] = input
+    pointer + 2
+  end
+
+  def output(pointer)
+    puts "OUTPUT: #{program[program[pointer + 1]]}"
+    pointer + 2
+  end
+
+  def jump_if_true(pointer)
+    modes = parameter_modes(program[pointer])
+    predicate = value_for_mode(modes[100], program[pointer + 1])
+    dest = value_for_mode(modes[1000], program[pointer + 2])
+
+    return dest unless predicate == 0
+
+    pointer + 3
+  end
+
+  def jump_if_false(pointer)
+    modes = parameter_modes(program[pointer])
+    predicate = value_for_mode(modes[100], program[pointer + 1])
+    dest = value_for_mode(modes[1000], program[pointer + 2])
+
+    return dest if predicate == 0
+
+    pointer + 3
+  end
+
+  def less_than(pointer)
+    modes = parameter_modes(program[pointer])
+    a = value_for_mode(modes[100], program[pointer + 1])
+    b = value_for_mode(modes[1000], program[pointer + 2])
+
+    if a < b
+      program[program[pointer + 3]] = 1
+    else
+      program[program[pointer + 3]] = 0
+    end
+
+    pointer + 4
+  end
+
+  def equals(pointer)
+    modes = parameter_modes(program[pointer])
+    a = value_for_mode(modes[100], program[pointer + 1])
+    b = value_for_mode(modes[1000], program[pointer + 2])
+
+    if a == b
+      program[program[pointer + 3]] = 1
+    else
+      program[program[pointer + 3]] = 0
+    end
+
+    pointer + 4
+  end
+
+  def binary_op(op, pointer)
+    modes = parameter_modes(program[pointer])
+    operand_one = value_for_mode(modes[100], program[pointer + 1])
+    operand_two = value_for_mode(modes[1000], program[pointer + 2])
+    dest = program[pointer + 3]
+    program[dest] = operand_one.send(op, operand_two)
+    pointer + 4
+  end
+
+  def +(pointer)
+    binary_op(:+, pointer)
+  end
+
+  def *(pointer)
+    binary_op(:*, pointer)
+  end
+
   def process(pointer)
     operation = opcodes(program[pointer])
     return nil if operation == :halt
 
-    modes = parameter_modes(program[pointer])
-
-    if operation == :input
-      puts "INPUT: "
-      input = gets.chomp.to_i
-      dest = program[pointer + 1]
-      program[dest] = input
-      pointer + 2
-    elsif operation == :output
-      puts "OUTPUT: #{program[program[pointer + 1]]}"
-      pointer + 2
-    else
-      operand_one = value_for_mode(modes[100], program, program[pointer + 1])
-      operand_two = value_for_mode(modes[1000], program, program[pointer + 2])
-      dest = program[pointer + 3]
-      program[dest] = operand_one.send(operation, operand_two)
-      pointer + 4
-    end
+    self.send(operation, pointer)
   end
 end
